@@ -1,0 +1,14 @@
+pyspark==4.2.0
+pandas
+faker
+pytest
+delta-spark   # optional locally (needs Maven access); used natively on Databricks
+
+# Added in later phases -- uncomment as you build them:
+# mlflow                 # Phase 2: model tracking
+# scikit-learn            # Phase 2: churn model
+# feast                   # Phase 2: feature store (optional, Databricks Feature Store is an alternative)
+# langchain / langgraph   # Phase 3: GenAI agent
+# chromadb                # Phase 3: RAG vector store
+# streamlit                # Phase 3: chat UI
+# great-expectations       # Phase 4 (optional upgrade over the custom dq_checks.py)
