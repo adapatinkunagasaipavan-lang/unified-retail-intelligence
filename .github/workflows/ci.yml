@@ -41,6 +41,20 @@ jobs:
           python genai/agents/router.py --gold-dir data/lake/gold --question "What is the churn rate?"
           python genai/agents/router.py --gold-dir data/lake/gold --question "What were the top 3 selling categories?"
 
+      - name: Run model-layer incident simulation (Phase 4)
+        run: python ml/evaluation/simulate_model_incident.py --input data/lake/gold/customer_features --min-auc 0.75
+
+      - name: Re-verify model gate still passes after the incident sim
+        run: python ml/evaluation/evaluate_model.py --model-name churn-model --min-auc 0.75
+
+      # Real proof the Dockerfiles work, not just written-and-hoped: build
+      # all three images on GitHub's runners, which have Docker preinstalled.
+      - name: Build Docker images
+        run: |
+          docker build -f docker/Dockerfile.pipeline -t urip-pipeline .
+          docker build -f docker/Dockerfile.genai -t urip-genai .
+          docker build -f docker/Dockerfile.monitoring -t urip-monitoring .
+
       # This is the step that BLOCKS deployment if data quality regresses.
       # run_pipeline.py already exits non-zero on DQ failure, which fails
       # this job and prevents any later "deploy" job (not shown here) from running.

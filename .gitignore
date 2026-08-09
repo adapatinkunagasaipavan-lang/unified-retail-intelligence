@@ -5,5 +5,7 @@ data/lake/
 mlruns.db
 mlruns/
 mlartifacts/
+monitoring/metrics_history.jsonl
+monitoring/query_log.jsonl
 .DS_Store
 *.egg-info/

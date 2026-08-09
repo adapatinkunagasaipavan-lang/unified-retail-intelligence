@@ -16,6 +16,7 @@ Usage:
 import argparse
 import json
 import sys
+import os
 
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
@@ -70,6 +71,8 @@ def main():
     parser.add_argument("--format", default="parquet", choices=["delta", "parquet"])
     parser.add_argument("--threshold", type=float, default=0.95,
                          help="Minimum overall_score to pass. Exits 1 if below this.")
+    parser.add_argument("--report-out", type=str, default=None,
+                         help="Optional path to write the JSON report to, for monitoring/run_pipeline.py to pick up.")
     args = parser.parse_args()
 
     spark = get_spark()
@@ -77,6 +80,11 @@ def main():
 
     report = run_checks(df)
     print(json.dumps(report, indent=2))
+
+    if args.report_out:
+        os.makedirs(os.path.dirname(args.report_out) or ".", exist_ok=True)
+        with open(args.report_out, "w") as f:
+            json.dump(report, f, indent=2)
 
     score = report["overall_score"]
     if score < args.threshold:

@@ -1,0 +1,19 @@
+# GenAI image: the Streamlit chat UI (text-to-SQL + churn explainer).
+# Deliberately lighter than Dockerfile.pipeline -- no JVM needed, since
+# this service only reads the already-built Gold Parquet tables via
+# DuckDB/pandas and loads the already-trained model via MLflow, it never
+# runs Spark itself.
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 8501
+
+# Reads data/lake/gold and mlruns.db -- mount these as read-only volumes
+# from the pipeline image's output (see docker-compose.yml).
+ENTRYPOINT ["streamlit", "run", "genai/app.py", "--server.address=0.0.0.0", "--server.port=8501"]

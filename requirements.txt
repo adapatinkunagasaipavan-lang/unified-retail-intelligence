@@ -11,7 +11,10 @@ pyarrow       # needed for pandas to read Parquet Gold tables
 
 # Phase 3: GenAI layer (text-to-SQL + churn explainer + chat UI)
 duckdb        # real SQL execution against Gold Parquet tables, no server needed
-streamlit     # chat UI
+streamlit     # chat UI + monitoring dashboard
+
+# Phase 4: monitoring dashboard
+plotly
 
 # Added in later phases -- uncomment as you build them:
 # feast                   # Phase 2 (optional): feature store beyond the plain Gold table

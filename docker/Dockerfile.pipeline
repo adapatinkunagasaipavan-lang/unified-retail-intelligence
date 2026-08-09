@@ -1,0 +1,21 @@
+# Pipeline image: Bronze -> Silver -> Gold -> churn model training.
+# Needs a JVM because PySpark requires one -- this is the heavier of the
+# two images; the GenAI image (Dockerfile.genai) deliberately avoids
+# Spark/Java entirely since DuckDB + pandas don't need it.
+FROM python:3.12-slim
+
+# --- Java (required by PySpark) ---
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends openjdk-17-jre-headless && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+ENTRYPOINT ["python", "pipelines/run_pipeline.py"]
+CMD ["--format", "parquet", "--dq-threshold", "0.90", "--model-min-auc", "0.75"]

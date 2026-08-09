@@ -52,8 +52,14 @@ Gold    (category sales for BI, customer features for ML)
       in both a CLI chat (`genai/agents/router.py`) and a Streamlit UI
       (`genai/app.py`). See `docs/explanation_direction_bug_note.md` for a
       second real bug caught and fixed during this phase.
-- [ ] **Phase 4 — Full MLOps polish.** Monitoring dashboard, Docker + K8s
-      deployment, incident simulation for the model layer.
+- [x] **Phase 4 — Full MLOps polish.** Monitoring logging wired into every
+      pipeline run (including failed ones, so incidents are visible, not
+      hidden), a Streamlit monitoring dashboard (data quality trend, model
+      ROC-AUC trend, GenAI query activity), a model-layer incident
+      simulation mirroring the Phase 1 data incident, and three
+      Docker images (pipeline / genai / monitoring) wired together with
+      docker-compose, actually built (not just written) on every CI run.
+      See `docs/model_incident_postmortem.md` and `docs/deployment.md`.
 
 ## Quickstart
 
@@ -87,6 +93,17 @@ python genai/agents/router.py --gold-dir data/lake/gold
 
 # 8. Or launch the Streamlit chat UI
 streamlit run genai/app.py
+
+# 9. Launch the monitoring dashboard (data quality + model + GenAI activity trends)
+streamlit run monitoring/dashboard.py --server.port 8502
+
+# 10. See the model-layer incident story in action (mirrors step 4, for the model)
+python ml/evaluation/simulate_model_incident.py --input data/lake/gold/customer_features --min-auc 0.75
+
+# 11. Or run everything in Docker (see docs/deployment.md for first-time setup)
+docker compose build
+docker compose run --rm pipeline
+docker compose up genai monitoring
 ```
 
 ## What each layer proves
@@ -101,7 +118,10 @@ streamlit run genai/app.py
 | **Model Evaluation Gate** | CI-blocking check on Production model quality, same pattern as the data quality gate |
 | **Inference + Explanation** | Batch scoring plus a per-customer "why is this customer high-risk" explanation using a reference-profile comparison -- see `docs/explanation_direction_bug_note.md` for a real bug caught in the first version |
 | **GenAI Agent (text-to-SQL + explainer)** | A two-mode natural-language interface with zero hallucination risk by construction -- every data answer comes from real SQL executed via DuckDB against the actual Gold tables, every risk explanation comes from the real Production model. No API key, fully offline. |
-| **CI/CD** | Every push runs the real pipeline (data + model) plus a GenAI agent smoke test against fresh synthetic data, and fails the build if any gate fails |
+| **Monitoring** | Every pipeline run (including failed ones) and every GenAI query logged to a time series, visualized in a live dashboard -- data quality trend, model ROC-AUC trend, query intent distribution |
+| **Model Incident Simulation** | A deliberately broken model (0.50 ROC-AUC) proven to get registered-but-not-promoted, while the real Production model stays untouched -- see `docs/model_incident_postmortem.md` |
+| **Deployment (Docker)** | Three purpose-split images (pipeline / genai / monitoring), wired together with docker-compose, actually built on every CI run -- see `docs/deployment.md` |
+| **CI/CD** | Every push runs the real pipeline (data + model), a GenAI agent smoke test, the model incident simulation, and builds all three Docker images -- fails the build if any gate fails or any image fails to build |
 
 ## Why Databricks-native, tested locally
 
@@ -150,6 +170,16 @@ unified-retail-intelligence/
 > Built a two-mode GenAI assistant (text-to-SQL over Gold tables via DuckDB,
 > plus a model-backed churn-risk explainer) with zero-hallucination-by-design
 > answers, wrapped in a Streamlit chat UI, requiring no external API key.
+
+> Containerized the full platform into three purpose-split Docker images
+> (batch pipeline, GenAI inference service, monitoring dashboard),
+> orchestrated with docker-compose, with CI validating every image actually
+> builds on every push.
+
+> Built a monitoring dashboard tracking data quality score, model ROC-AUC,
+> and GenAI query activity over time, and simulated both a data-layer and a
+> model-layer production incident to prove the quality gates actually block
+> bad deployments, not just claim to.
 
 > Simulated and documented a production data-quality incident (score drop
 > from 95.9% to 66.8%), demonstrating automated detection, pipeline

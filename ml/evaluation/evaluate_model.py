@@ -8,6 +8,8 @@ Usage:
     python ml/evaluation/evaluate_model.py --model-name churn-model --min-auc 0.75
 """
 import argparse
+import json
+import os
 import sys
 
 import mlflow
@@ -19,6 +21,8 @@ def main():
     parser.add_argument("--model-name", default="churn-model")
     parser.add_argument("--tracking-uri", default="sqlite:///mlruns.db")
     parser.add_argument("--min-auc", type=float, default=0.75)
+    parser.add_argument("--report-out", type=str, default=None,
+                         help="Optional path to write the JSON report to, for monitoring/run_pipeline.py to pick up.")
     args = parser.parse_args()
 
     mlflow.set_tracking_uri(args.tracking_uri)
@@ -37,6 +41,18 @@ def main():
     print(f"Production model: {args.model_name} v{prod_version.version}")
     print(f"  ROC-AUC: {auc:.4f}")
     print(f"  Threshold: {args.min_auc:.4f}")
+
+    report = {
+        "model_name": args.model_name,
+        "model_version": prod_version.version,
+        "roc_auc": auc,
+        "threshold": args.min_auc,
+        "passed": bool(auc is not None and auc >= args.min_auc),
+    }
+    if args.report_out:
+        os.makedirs(os.path.dirname(args.report_out) or ".", exist_ok=True)
+        with open(args.report_out, "w") as f:
+            json.dump(report, f, indent=2)
 
     if auc is None:
         print("MODEL GATE FAILED: roc_auc metric not found on the run.", file=sys.stderr)

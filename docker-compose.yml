@@ -1,0 +1,43 @@
+services:
+  # Runs Bronze -> Silver -> Gold -> train model -> gates, then exits.
+  # Run this first (or on a schedule in production) before the genai/
+  # monitoring services have anything real to show.
+  pipeline:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.pipeline
+    volumes:
+      - ./data:/app/data
+      - ./monitoring:/app/monitoring
+      - ./mlruns.db:/app/mlruns.db
+      - ./mlruns:/app/mlruns
+      - ./mlartifacts:/app/mlartifacts
+
+  # The chat UI. Reads whatever the pipeline service last produced.
+  genai:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.genai
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data:ro
+      - ./mlruns.db:/app/mlruns.db:ro
+      - ./mlruns:/app/mlruns:ro
+      - ./mlartifacts:/app/mlartifacts:ro
+      - ./monitoring:/app/monitoring
+    depends_on:
+      - pipeline
+
+  # The monitoring dashboard. Reads the metrics/query logs the pipeline
+  # and genai services write to.
+  monitoring:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.monitoring
+    ports:
+      - "8502:8502"
+    volumes:
+      - ./monitoring:/app/monitoring:ro
+    depends_on:
+      - pipeline
