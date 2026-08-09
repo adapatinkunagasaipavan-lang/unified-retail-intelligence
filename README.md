@@ -9,6 +9,9 @@ a GenAI RAG/text-to-SQL assistant for natural-language analytics.
 
 ## Architecture
 
+See `docs/architecture.md` for the full diagram (data flow, ML lifecycle,
+GenAI layer, and the Docker deployment view). Quick summary:
+
 ```
 Raw Data (synthetic retail transactions)
    |
@@ -24,12 +27,17 @@ Silver  (cleaning, dedup, business rules, quarantine table)
    v
 Gold    (category sales for BI, customer features for ML)
    |
-   +--> ML: churn model + MLflow tracking          [Phase 2 -- in progress]
+   +--> ML: churn model + MLflow tracking + promotion gate  [done]
    |
-   +--> GenAI: text-to-SQL / RAG assistant           [Phase 3 -- in progress]
+   +--> GenAI: text-to-SQL / churn explainer, no API key    [done]
    |
-   +--> CI/CD: GitHub Actions test + DQ gate         [done -- see .github/workflows/ci.yml]
+   +--> Monitoring: pipeline + query metrics, live dashboard [done]
+   |
+   +--> CI/CD: GitHub Actions -- tests, gates, Docker builds  [done]
 ```
+
+For a live 2-3 minute walkthrough (including the two bugs caught during
+development), see `docs/demo_script.md`.
 
 ## Status
 
@@ -117,7 +125,7 @@ docker compose up genai monitoring
 | **ML Training + MLflow** | Full experiment tracking, model registry, and a promotion gate that only ships a model if it's actually better -- see `docs/data_leakage_note.md` for a real bug caught in development |
 | **Model Evaluation Gate** | CI-blocking check on Production model quality, same pattern as the data quality gate |
 | **Inference + Explanation** | Batch scoring plus a per-customer "why is this customer high-risk" explanation using a reference-profile comparison -- see `docs/explanation_direction_bug_note.md` for a real bug caught in the first version |
-| **GenAI Agent (text-to-SQL + explainer)** | A two-mode natural-language interface with zero hallucination risk by construction -- every data answer comes from real SQL executed via DuckDB against the actual Gold tables, every risk explanation comes from the real Production model. No API key, fully offline. |
+| **GenAI Agent (text-to-SQL + explainer)** | A two-mode natural-language interface with grounded answers by construction -- data responses are generated from executed SQL against the actual Gold tables via DuckDB, while risk explanations are produced by the real Production model, not freeform generation. No API key, fully offline. |
 | **Monitoring** | Every pipeline run (including failed ones) and every GenAI query logged to a time series, visualized in a live dashboard -- data quality trend, model ROC-AUC trend, query intent distribution |
 | **Model Incident Simulation** | A deliberately broken model (0.50 ROC-AUC) proven to get registered-but-not-promoted, while the real Production model stays untouched -- see `docs/model_incident_postmortem.md` |
 | **Deployment (Docker)** | Three purpose-split images (pipeline / genai / monitoring), wired together with docker-compose, actually built on every CI run -- see `docs/deployment.md` |
@@ -168,8 +176,9 @@ unified-retail-intelligence/
 > label-derived feature), and added a regression test to prevent recurrence.
 
 > Built a two-mode GenAI assistant (text-to-SQL over Gold tables via DuckDB,
-> plus a model-backed churn-risk explainer) with zero-hallucination-by-design
-> answers, wrapped in a Streamlit chat UI, requiring no external API key.
+> plus a model-backed churn-risk explainer) with grounded, source-traceable
+> answers by construction, wrapped in a Streamlit chat UI, requiring no
+> external API key.
 
 > Containerized the full platform into three purpose-split Docker images
 > (batch pipeline, GenAI inference service, monitoring dashboard),
