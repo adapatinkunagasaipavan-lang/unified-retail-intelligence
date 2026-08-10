@@ -39,6 +39,13 @@ Gold    (category sales for BI, customer features for ML)
 For a live 2-3 minute walkthrough (including the two bugs caught during
 development), see `docs/demo_script.md`.
 
+## Why Databricks-native, tested locally
+
+The transform code is plain PySpark with no local-only dependencies -- see
+`docs/DATABRICKS.md` for exactly what changes (Delta vs Parquet, Workflow
+orchestration, Unity Catalog) when this is deployed to a real Databricks
+workspace instead of run locally.
+
 ## Status
 
 - [x] **Phase 1 — Data Engineering Foundation.** Bronze -> Silver -> Gold on
@@ -130,13 +137,6 @@ docker compose up genai monitoring
 | **Model Incident Simulation** | A deliberately broken model (0.50 ROC-AUC) proven to get registered-but-not-promoted, while the real Production model stays untouched -- see `docs/model_incident_postmortem.md` |
 | **Deployment (Docker)** | Three purpose-split images (pipeline / genai / monitoring), wired together with docker-compose, actually built on every CI run -- see `docs/deployment.md` |
 | **CI/CD** | Every push runs the real pipeline (data + model), a GenAI agent smoke test, the model incident simulation, and builds all three Docker images -- fails the build if any gate fails or any image fails to build |
-
-## Why Databricks-native, tested locally
-
-The transform code is plain PySpark with no local-only dependencies -- see
-`docs/DATABRICKS.md` for exactly what changes (Delta vs Parquet, Workflow
-orchestration, Unity Catalog) when this is deployed to a real Databricks
-workspace instead of run locally.
 
 ## Repo structure
 
