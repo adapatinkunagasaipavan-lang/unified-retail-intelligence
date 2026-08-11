@@ -21,4 +21,4 @@ plotly
 # great-expectations       # Phase 4 (optional upgrade over the custom dq_checks.py)
  
 protobuf==4.25.3
-setuptools
+setuptools<81
