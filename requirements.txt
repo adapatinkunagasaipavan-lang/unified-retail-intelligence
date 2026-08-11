@@ -19,4 +19,5 @@ plotly
 # Added in later phases -- uncomment as you build them:
 # feast                   # Phase 2 (optional): feature store beyond the plain Gold table
 # great-expectations       # Phase 4 (optional upgrade over the custom dq_checks.py)
-protobuf==4.25.3 
+ 
+protobuf>=5.28.0
