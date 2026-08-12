@@ -1,0 +1,2 @@
+{"timestamp": "2026-08-09T20:13:24.122583+00:00", "dq_overall_score": 0.9592, "dq_total_rows": 15132, "dq_fully_passing_rows": 14514, "model_roc_auc": 0.9249743062692704, "model_version": 3, "model_gate_passed": true, "pipeline_duration_seconds": 95.48}
+{"timestamp": "2026-08-12T23:05:07.932619+00:00", "dq_overall_score": 0.9592, "dq_total_rows": 20176, "dq_fully_passing_rows": 19352, "model_roc_auc": 0.9249743062692704, "model_version": 3, "model_gate_passed": true, "pipeline_duration_seconds": 158.04}
