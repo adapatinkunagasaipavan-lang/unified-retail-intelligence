@@ -24,8 +24,7 @@ with st.sidebar:
         "- What were the top 5 selling categories?\n"
         "- What is the total sales for Electronics?\n"
         "- What is the churn rate?\n"
-        "- What is the total revenue?\n"
-        "- Why is customer CUST000279 high risk?"
+        "- What is the total revenue?"
     )
 @st.cache_resource(show_spinner="Loading Gold tables and Production model...")
 def get_agent(gold_dir: str):
